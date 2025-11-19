@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeRepo - 代码仓库网页化平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #238636;
+            --primary-dark: #2ea043;
+            --bg-dark: #0d1117;
+            --bg-darker: #010409;
+            --bg-light: #161b22;
+            --text: #e6edf3;
+            --text-secondary: #7d8590;
+            --border: #30363d;
+            --accent: #1f6feb;
+            --sidebar-width: 280px;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text);
+            line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 左侧导航栏 */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--bg-darker);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .logo i {
+            color: var(--primary);
+        }
+
+        .user-info {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .user-email {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .nav-section {
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-title {
+            padding: 0 20px 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-links {
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-bottom: 4px;
+        }
+
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 20px;
+            color: var(--text);
+            text-decoration: none;
+            transition: background-color 0.2s;
+            font-size: 14px;
+        }
+
+        .nav-links a:hover {
+            background-color: var(--bg-light);
+        }
+
+        .nav-links a.active {
+            background-color: var(--bg-light);
+            border-left: 3px solid var(--primary);
+        }
+
+        .nav-links i {
+            width: 20px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .nav-links a.active i {
+            color: var(--primary);
+        }
+
+        .repo-list {
+            list-style: none;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .repo-list li {
+            margin-bottom: 4px;
+        }
+
+        .repo-list a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 20px;
+            color: var(--text);
+            text-decoration: none;
+            transition: background-color 0.2s;
+            font-size: 14px;
+        }
+
+        .repo-list a:hover {
+            background-color: var(--bg-light);
+        }
+
+        .repo-icon {
+            color: var(--text-secondary);
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .sidebar-footer p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* 头部导航 */
+        header {
+            background-color: var(--bg-darker);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            width: 400px;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            color: var(--text);
+            width: 100%;
+            outline: none;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--bg-light);
+        }
+
+        /* 主要内容区域 */
+        main {
+            padding: 40px 0;
+        }
+
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, var(--bg-darker) 0%, var(--bg-light) 100%);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .welcome-section h1 {
+            font-size: 48px;
+            margin-bottom: 16px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-section p {
+            font-size: 20px;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto 30px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .feature-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+            color: var(--primary);
+        }
+
+        .feature-card h3 {
+            margin-bottom: 12px;
+            font-size: 20px;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+        }
+
+        /* 仓库列表 */
+        .repos-section h2 {
+            margin-bottom: 24px;
+            font-size: 28px;
+        }
+
+        .repo-list-main {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .repo-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s;
+        }
+
+        .repo-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+        }
+
+        .repo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .repo-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .repo-name:hover {
+            text-decoration: underline;
+        }
+
+        .repo-visibility {
+            font-size: 12px;
+            padding: 2px 8px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .repo-description {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .repo-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .repo-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 代码浏览区域 */
+        .code-browser {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 40px;
+        }
+
+        .code-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-path {
+            font-family: monospace;
+            color: var(--text-secondary);
+        }
+
+        .code-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .code-content {
+            padding: 0;
+        }
+
+        pre {
+            margin: 0;
+            padding: 20px;
+            overflow-x: auto;
+            background-color: var(--bg-darker);
+        }
+
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+        }
+
+        /* 页脚 */
+        footer {
+            background-color: var(--bg-darker);
+            border-top: 1px solid var(--border);
+            padding: 40px 0;
+            margin-top: 60px;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+
+        .footer-column h3 {
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 8px;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .copyright {
+            text-align: center;
+            margin-top: 40px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .search-box {
+                width: 100%;
+                max-width: 400px;
+            }
+
+            .welcome-section h1 {
+                font-size: 36px;
+            }
+
+            .repo-list-main {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-content {
+                flex-direction: column;
+            }
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 1024px) {
+            .menu-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 左侧导航栏 -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-code-branch"></i>
+                <span>CodeRepo</span>
+            </div>
+        </div>
+
+        <div class="user-info">
+            <div class="user-avatar">JD</div>
+            <div class="user-details">
+                <div class="user-name">John Developer</div>
+                <div class="user-email">john@example.com</div>
+            </div>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-title">导航</div>
+            <ul class="nav-links">
+                <li><a href="#" class="active"><i class="fas fa-home"></i> 首页</a></li>
+                <li><a href="#"><i class="fas fa-compass"></i> 探索</a></li>
+                <li><a href="#"><i class="fas fa-star"></i> 收藏</a></li>
+                <li><a href="#"><i class="fas fa-history"></i> 最近访问</a></li>
+                <li><a href="#"><i class="fas fa-cog"></i> 设置</a></li>
+            </ul>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-title">我的仓库</div>
+            <ul class="repo-list">
+                <li><a href="#"><i class="fas fa-book repo-icon"></i> web-development-course</a></li>
+                <li><a href="#"><i class="fas fa-book repo-icon"></i> react-ui-library</a></li>
+                <li><a href="#"><i class="fas fa-book repo-icon"></i> data-visualization-tool</a></li>
+                <li><a href="#"><i class="fas fa-book repo-icon"></i> mobile-app-project</a></li>
+                <li><a href="#"><i class="fas fa-book repo-icon"></i> api-server</a></li>
+                <li><a href="#"><i class="fas fa-book repo-icon"></i> documentation</a></li>
+            </ul>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-title">团队</div>
+            <ul class="nav-links">
+                <li><a href="#"><i class="fas fa-users"></i> 前端团队</a></li>
+                <li><a href="#"><i class="fas fa-users"></i> 后端团队</a></li>
+                <li><a href="#"><i class="fas fa-users"></i> 设计团队</a></li>
+            </ul>
+        </div>
+
+        <div class="sidebar-footer">
+            <p>CodeRepo v2.1.0</p>
+        </div>
+    </aside>
+
+    <!-- 主内容区域 -->
+    <div class="main-content">
+        <header>
+            <div class="container">
+                <div class="header-content">
+                    <button class="menu-toggle" id="menuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="搜索仓库、代码、用户...">
+                    </div>
+
+                    <div class="header-actions">
+                        <a href="#" class="btn btn-outline">反馈</a>
+                        <a href="#" class="btn btn-primary">新建仓库</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="container">
+                <section class="welcome-section">
+                    <h1>构建、分享、协作</h1>
+                    <p>CodeRepo 是一个现代化的代码托管平台，让开发者可以轻松管理代码仓库、协作开发项目。</p>
+                    <a href="#" class="btn btn-primary" style="padding: 12px 24px; font-size: 16px;">创建新仓库</a>
+                </section>
+
+                <section class="features">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <h3>代码托管</h3>
+                        <p>安全可靠地存储您的代码，支持 Git 版本控制，轻松管理项目历史。</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3>团队协作</h3>
+                        <p>与团队成员高效协作，通过 Pull Request 进行代码审查和讨论。</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>安全可靠</h3>
+                        <p>企业级安全保护，确保您的代码和数据安全无虞。</p>
+                    </div>
+                </section>
+
+                <section class="repos-section">
+                    <h2>热门仓库</h2>
+                    <div class="repo-list-main">
+                        <div class="repo-card">
+                            <div class="repo-header">
+                                <a href="#" class="repo-name">web-development-course</a>
+                                <span class="repo-visibility">公开</span>
+                            </div>
+                            <p class="repo-description">完整的Web开发课程资料，包含HTML、CSS、JavaScript和React。</p>
+                            <div class="repo-meta">
+                                <span><i class="fas fa-star"></i> 1,245</span>
+                                <span><i class="fas fa-code-branch"></i> JavaScript</span>
+                                <span><i class="fas fa-circle"></i> 更新于 2 天前</span>
+                            </div>
+                        </div>
+
+                        <div class="repo-card">
+                            <div class="repo-header">
+                                <a href="#" class="repo-name">react-ui-library</a>
+                                <span class="repo-visibility">公开</span>
+                            </div>
+                            <p class="repo-description">一套高质量的React UI组件库，用于快速构建现代Web应用。</p>
+                            <div class="repo-meta">
+                                <span><i class="fas fa-star"></i> 892</span>
+                                <span><i class="fas fa-code-branch"></i> TypeScript</span>
+                                <span><i class="fas fa-circle"></i> 更新于 1 周前</span>
+                            </div>
+                        </div>
+
+                        <div class="repo-card">
+                            <div class="repo-header">
+                                <a href="#" class="repo-name">data-visualization-tool</a>
+                                <span class="repo-visibility">公开</span>
+                            </div>
+                            <p class="repo-description">基于D3.js的数据可视化工具，支持多种图表类型和交互功能。</p>
+                            <div class="repo-meta">
+                                <span><i class="fas fa-star"></i> 567</span>
+                                <span><i class="fas fa-code-branch"></i> JavaScript</span>
+                                <span><i class="fas fa-circle"></i> 更新于 3 天前</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="code-browser">
+                    <div class="code-header">
+                        <div class="file-path">react-ui-library/src/components/Button/Button.jsx</div>
+                        <div class="code-actions">
+                            <button class="btn btn-outline">原始</button>
+                            <button class="btn btn-outline">下载</button>
+                            <button class="btn btn-primary" id="copy-btn">复制</button>
+                        </div>
+                    </div>
+                    <div class="code-content">
+                        <pre><code id="code-block">
+import React from 'react';
+import PropTypes from 'prop-types';
+import './Button.css';
+
+const Button = ({
+  children,
+  variant = 'primary',
+  size = 'medium',
+  disabled = false,
+  onClick,
+  ...props
+}) => {
+  const classNames = `btn btn-${variant} btn-${size} ${disabled ? 'btn-disabled' : ''}`;
+
+  return (
+    &lt;button
+      className={classNames}
+      disabled={disabled}
+      onClick={onClick}
+      {...props}
+    &gt;
+      {children}
+    &lt;/button&gt;
+  );
+};
+
+Button.propTypes = {
+  children: PropTypes.node.isRequired,
+  variant: PropTypes.oneOf(['primary', 'secondary', 'danger']),
+  size: PropTypes.oneOf(['small', 'medium', 'large']),
+  disabled: PropTypes.bool,
+  onClick: PropTypes.func,
+};
+
+export default Button;
+                        </code></pre>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <footer>
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-column">
+                        <h3>产品</h3>
+                        <ul class="footer-links">
+                            <li><a href="#">功能</a></li>
+                            <li><a href="#">安全</a></li>
+                            <li><a href="#">团队</a></li>
+                            <li><a href="#">企业版</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-column">
+                        <h3>平台</h3>
+                        <ul class="footer-links">
+                            <li><a href="#">开发者API</a></li>
+                            <li><a href="#">合作伙伴</a></li>
+                            <li><a href="#">Atom</a></li>
+                            <li><a href="#">Electron</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-column">
+                        <h3>支持</h3>
+                        <ul class="footer-links">
+                            <li><a href="#">帮助文档</a></li>
+                            <li><a href="#">社区论坛</a></li>
+                            <li><a href="#">专业服务</a></li>
+                            <li><a href="#">学习资源</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-column">
+                        <h3>公司</h3>
+                        <ul class="footer-links">
+                            <li><a href="#">关于我们</a></li>
+                            <li><a href="#">博客</a></li>
+                            <li><a href="#">招聘</a></li>
+                            <li><a href="#">联系我们</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="copyright">
+                    <p>&copy; 2023 CodeRepo Inc. 保留所有权利。</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 复制代码功能
+        document.getElementById('copy-btn').addEventListener('click', function() {
+            const code = document.getElementById('code-block').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = this.textContent;
+                this.textContent = '已复制!';
+                setTimeout(() => {
+                    this.textContent = originalText;
+                }, 2000);
+            });
+        });
+
+        // 简单的搜索功能
+        document.querySelector('.search-box input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                alert('搜索: ' + this.value);
+                this.value = '';
+            }
+        });
+
+        // 移动端菜单切换
+        document.getElementById('menuToggle').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        });
+
+        // 点击主内容区域关闭移动端菜单
+        document.querySelector('.main-content').addEventListener('click', function() {
+            if (window.innerWidth <= 1024) {
+                document.querySelector('.sidebar').classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
